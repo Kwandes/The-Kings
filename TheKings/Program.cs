@@ -11,9 +11,21 @@ namespace TheKings
 
         private static async Task Main(string[] args)
         {
+            string gistData = "";
             // Get the gist data from provided gistID
-            var gistData = await GetGistDataAsync("10d65ccef9f29de3acd49d97ed423736");
+            try
+            {
+                gistData = await GetGistDataAsync("10d65ccef9f29de3acd49d97ed423736");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                // There is nothing to do if the API request has failed, close the application
+                System.Environment.Exit(0);
+            }
             
+            // handle the gist data
+
             // Display the gist data
             Console.WriteLine(gistData);
         }
