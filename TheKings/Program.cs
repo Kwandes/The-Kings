@@ -121,15 +121,15 @@ namespace TheKings
     // Object representation of the Json data
     class King
     {
-        [JsonPropertyName("id")] private string id { get; set; }
+        [JsonPropertyName("id")] public string id { get; set; }
 
-        [JsonPropertyName("name")] private string nm { get; set; }
+        [JsonPropertyName("name")] public string nm { get; set; }
 
-        [JsonPropertyName("city")] private string cty { get; set; }
+        [JsonPropertyName("city")] public string cty { get; set; }
 
-        [JsonPropertyName("house")] private string hse { get; set; }
+        [JsonPropertyName("house")] public string hse { get; set; }
 
-        [JsonPropertyName("years")] private string yrs { get; set; }
+        [JsonPropertyName("years")] public string yrs { get; set; }
 
         public override string ToString()
         {
