@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using Newtonsoft.Json;
@@ -15,8 +16,10 @@ namespace TheKings
 
         private static async Task Main(string[] args)
         {
+            #region Get the gist data from provided gistID
+
             string gistData = "";
-            // Get the gist data from provided gistID
+
             try
             {
                 gistData = await GetGistDataAsync("10d65ccef9f29de3acd49d97ed423736");
@@ -27,6 +30,8 @@ namespace TheKings
                 // There is nothing to do if the API request has failed, close the application
                 System.Environment.Exit(0);
             }
+
+            #endregion
 
             // Convert the gist data to a usable format
             List<King> kings = null;
@@ -40,11 +45,76 @@ namespace TheKings
                 System.Environment.Exit(0);
             }
 
-            // Display the gist data
+            // Process the kings data and answer questions
+            AnswerQuestions(kings);
+        }
+
+        private static void AnswerQuestions(List<King> kings)
+        {
+            // Question 1
+            Console.WriteLine("Q: How many monarchs are there in the list?");
+            Console.WriteLine($"A: There are {kings.Count} monarchs in the list\n");
+            // alternate answer using LinQ: kings.Last().id
+
+            // Question 2
+            Console.WriteLine("Q: Which monarch ruled the longest (and for how long)?");
+
+            // Get longest ruling monarch
+            var longestRulingMonarch = kings.Aggregate((x1, x2) => x1.GetRuleTime() > x2.GetRuleTime() ? x1 : x2);
+
+            Console.WriteLine(
+                $"A: The longest ruler was/is {longestRulingMonarch.nm} who ruled for {longestRulingMonarch.GetRuleTime()} years\n");
+
+            // Question 3
+            Console.WriteLine("Q: Which house ruled the longest (and for how long)?");
+
+            var houses = new Dictionary<string, int>();
+
+            // Populate a dictionary with house data
             foreach (var king in kings)
             {
-                Console.WriteLine(king);
+                if (!houses.ContainsKey(king.hse))
+                {
+                    houses.Add(king.hse, king.GetRuleTime());
+                }
+                else
+                {
+                    int newValue;
+                    houses.TryGetValue(king.hse, out newValue);
+                    houses[king.hse] = newValue + king.GetRuleTime();
+                }
             }
+
+            // Get house name with most years ruled
+            var bestHouse = houses.Aggregate((x1, x2) => x1.Value > x2.Value ? x1 : x2);
+
+            Console.WriteLine($"A: Longest Ruling house is {bestHouse.Key}, which ruled for {bestHouse.Value} years\n");
+
+            // Question 4
+            Console.WriteLine("Q: What was the most common first name?");
+
+            var names = new Dictionary<string, int>();
+
+            // Populate the dictionary with the monarch names
+            foreach (var king in kings)
+            {
+                var name = king.nm.Split(" ")[0];
+                if (!names.ContainsKey(name))
+                {
+                    names.Add(name, 1);
+                }
+                else
+                {
+                    int newValue;
+                    names.TryGetValue(name, out newValue);
+                    names[name] = newValue + 1;
+                }
+            }
+
+            // Get the most used name
+            var mostCommonName = names.Aggregate((x1, x2) => x1.Value > x2.Value ? x1 : x2);
+
+            Console.WriteLine($"A: The most common name was {mostCommonName.Key}\n");
         }
 
         // Get gist data using Github API
@@ -134,6 +204,30 @@ namespace TheKings
         public override string ToString()
         {
             return $"Name: {nm} of {hse} \nCity: {cty} \nRuled in: {yrs}";
+        }
+
+        // Calculate and return how long given king has ruled for
+        public int GetRuleTime()
+        {
+            // if there is no dask I assume given King has ruled for one year
+            if (!yrs.Contains("-"))
+            {
+                return 1;
+            }
+            else
+            {
+                // If there is only start year and a dash, split throws an exception. I assume those rules are in power until today
+                try
+                {
+                    var years = yrs.Split('-');
+
+                    return int.Parse(years[1]) - int.Parse(years[0]);
+                }
+                catch (FormatException)
+                {
+                    return DateTime.Today.Year - int.Parse(yrs.Replace("-", ""));
+                }
+            }
         }
     }
 }
